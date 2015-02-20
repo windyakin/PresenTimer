@@ -135,6 +135,9 @@
 		},
 		decreaseTimes: function(delta) {
 			this.second -= delta;
+			if ( this.second < 0) {
+				this.stopTimeover();
+			}
 		},
 		getTimes: function() {
 			return this.second;
@@ -155,6 +158,11 @@
 		},
 		stopCount: function() {
 			this.countdown = false;
+		},
+		stopTimeover: function() {
+			this.stopCount();
+			this.resetCount(0);
+			socketio.socket.emit("stop timer");
 		},
 		resetCount: function(time) {
 			this.second = time;
