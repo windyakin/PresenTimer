@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Presen Timer Control(Scoket.io)</title>
+  <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="row">
+				<div class="col-xs-4">
+					<div class="form-group">
+						<input type="number" id="hour" name="hour" min="0" value="0" class="form-control input-lg">
+					</div>
+				</div>
+				<div class="col-xs-4">
+					<div class="form-group">
+						<input type="number" id="min" name="min" min="0" max="59" value="0" class="form-control input-lg">
+					</div>
+				</div>
+				<div class="col-xs-4">
+					<div class="form-group">
+						<input type="number" id="sec" name="sec" min="0" max="59" value="0" class="form-control input-lg">
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-xs-12">
+			<div class="btn-group input-group btn-group-justified" role="group">
+				<a class="btn btn-default btn-lg" href="#" id ="reset">RESET</a>
+				<a class="btn btn-default btn-lg" href="#" id="start">START</a>
+				<a class="btn btn-default btn-lg" href="#" id="stop">STOP</a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+<script type="text/javascript" src="/lib/jquery-1.11.2.js"></script>
+<script type="text/javascript" src="/lib/easeljs-0.8.0.combined.js"></script>
+<script type="text/javascript" src="/lib/preloadjs-0.6.0.combined.js"></script>
+<script type="text/javascript" src="/lib/tweenjs-0.6.0.combined.js"></script>
+<script type="text/javascript" src="/client/control.js"></script>
+
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>

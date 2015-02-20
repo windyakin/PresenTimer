@@ -1,0 +1,24 @@
+#=============================================
+# My Original Set
+#=============================================
+data/
+
+#=============================================
+# node.js & Grunt
+#=============================================
+node_modules/
+.grunt
+.tmp/
+
+#=============================================
+# Sublime Text
+#=============================================
+*.sublime-workspace
+*.sublime-project
+
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+
+sftp-config.json
+
