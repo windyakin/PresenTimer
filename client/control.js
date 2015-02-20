@@ -29,6 +29,7 @@
 			this.socket.emit('set timer', 0);
 		},
 		clickStart: function() {
+			this.changeTime();
 			this.socket.emit('start timer');
 		},
 		clickStop: function() {
