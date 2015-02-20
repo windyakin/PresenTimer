@@ -15,8 +15,10 @@ $ npm install
 $ node index.js
 ```
 
-[http://localhost:3000/](http://localhost:3000/)
-[http://localhost:3000/control](http://localhost:3000/control)
+ * 表示側
+    * [http://localhost:3000/](http://localhost:3000/)
+ * 操作側
+    * [http://localhost:3000/control](http://localhost:3000/control)
 
 ## Font
 
