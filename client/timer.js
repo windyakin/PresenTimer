@@ -67,19 +67,26 @@
 			var container = new createjs.Container();
 			// 黒色の背景
 			var back = new createjs.Shape();
-			back.graphics.f("#ccc").r(0, 0, CONSTANT.SIZE.width, CONSTANT.SIZE.height);
+			back.graphics.f("#000").r(0, 0, CONSTANT.SIZE.width, CONSTANT.SIZE.height);
 			back.set({x: 0, y: 0});
-			var text = new createjs.Text();
+			var text = new createjs.Text("よみこみかんりょう！", "48px PixelMplus12", "#fff");
 			text.set({
+				textAlign: "center",
 				x: CONSTANT.SIZE.width/2,
 				y :CONSTANT.SIZE.height/2 - text.getMeasuredHeight()/2,
-				text: "よみこみかんりょう",
-				font: "48px PixelMplus12",
-				color: "#000",
-				textAlign: "center"
 			});
+			var start = new createjs.Text("クリックでスタート", "48px PixelMplus12", "#fff");
+			start.set({
+				textAlign: "center",
+				x: CONSTANT.SIZE.width/2,
+				y :CONSTANT.SIZE.height/2 - text.getMeasuredHeight()/2 + 280,
+			});
+			createjs.Tween.get(start, {loop: true})
+				.to({alpha: 1}, 300)
+				.to({alpha: 0}, 300)
+				.to({alpha: 1}, 300);
 
-			container.addChild(back, text);
+			container.addChild(back, start, text);
 			container.addEventListener("click", function(event) {
 				_SCREENSTATUS = CONSTANT.SCREEN.TIMER;
 			});
@@ -98,7 +105,7 @@
 				x: CONSTANT.SIZE.width/2,
 				y :CONSTANT.SIZE.height/2 - text.getMeasuredHeight()/2 - 200
 			});
-			var shadow = new createjs.Text("88:88:88.88", "Italic Bold 180px DSEG7 Classic", "#222");
+			var shadow = new createjs.Text("88:88:88.8", "Italic Bold 180px DSEG7 Classic", "#222");
 			shadow.set({
 				textAlign: "center",
 				x: CONSTANT.SIZE.width/2,
@@ -109,13 +116,20 @@
 				textAlign: "center",
 				x: CONSTANT.SIZE.width/2,
 				y :CONSTANT.SIZE.height/2 - time.getMeasuredHeight()/2,
-				shadow: new createjs.Shadow("#FFD400", 0, 0, 10)
+				//shadow: new createjs.Shadow("#FFD400", 0, 0, 10)
 			});
+
 			createjs.Ticker.addEventListener("tick", function(evt) {
 				if ( timer.countdown ) {
 					timer.decreaseTimes(evt.delta/1000);
 				}
 				time.set({text: timer.getFormattedTimes() });
+				if ( timer.getTimes() < 10 ) {
+					time.set({ color: "#FF3B21"});
+				}
+				else {
+					time.set({ color: "#FFD032"});
+				}
 			});
 			container.addChild(back, text, shadow, time);
 			return container;
@@ -148,7 +162,7 @@
 				hour: this.fillZero(Math.floor(second/3600)),
 				min:  this.fillZero(Math.floor(second/60%60)),
 				sec:  this.fillZero(Math.floor(second%60)),
-				msec: this.fillZero(Math.floor(second*100%100))
+				msec: Math.floor(second*10%10)
 			};
 			
 			return [ times.hour, times.min, times.sec ].join(":") + "." + times.msec;
