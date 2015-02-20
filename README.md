@@ -1,4 +1,4 @@
-# PresetTimer
+# PresenTimer
 
 ソケット通信でプレゼンタイマーを操作できるよ(実装は結構適当)
 
@@ -11,8 +11,8 @@
 Node.jsを使います。
 
 ```
-	$ npm install
-	$ node index.js
+$ npm install
+$ node index.js
 ```
 
 [http://localhost:3000/](http://localhost:3000/)
