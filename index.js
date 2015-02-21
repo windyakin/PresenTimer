@@ -15,7 +15,7 @@ app.get('/control', function(req, res){
 
 io.on('connection', function(socket){
 
-	console.log(socket.id)
+	console.log(socket.id);
 
 	socket
 		.on('start timer', function(){
@@ -28,7 +28,11 @@ io.on('connection', function(socket){
 		})
 		.on('set timer', function(sec) {
 			io.emit('set timer', sec)
-			console.log("set "+sec+"sec")
+			console.log("set "+sec+"sec");
+		})
+		.on('countup timer', function(sec) {
+			io.emit('countup timer', sec)
+			console.log("countup");
 		});
 
 	socket.on('disconnect', function(){

@@ -105,33 +105,27 @@
 				x: CONSTANT.SIZE.width/2,
 				y :CONSTANT.SIZE.height/2 - text.getMeasuredHeight()/2 - 200
 			});
-			var shadow = new createjs.Text("88:88:88.8", "Italic Bold 180px DSEG7 Classic", "#222");
+			var shadow = new createjs.Text("88:88:88.88", "Italic Bold 180px DSEG7 Classic Mini", "#222");
 			shadow.set({
 				textAlign: "center",
 				x: CONSTANT.SIZE.width/2,
 				y :CONSTANT.SIZE.height/2 - shadow.getMeasuredHeight()/2
 			});
-			var time = new createjs.Text(timer.getFormattedTimes(), "Italic Bold 180px DSEG7 Classic", "#FFD032");
+			var time = new createjs.Text(timer.getFormattedTimes(), "Italic Bold 180px DSEG7 Classic Mini", "#FFD032");
 			time.set({
 				textAlign: "center",
 				x: CONSTANT.SIZE.width/2,
 				y :CONSTANT.SIZE.height/2 - time.getMeasuredHeight()/2,
-				//shadow: new createjs.Shadow("#FFD400", 0, 0, 10)
+				shadow: new createjs.Shadow("#FFD400", 0, 5, 5)
 			});
-
 			createjs.Ticker.addEventListener("tick", function(evt) {
 				if ( timer.countdown ) {
 					timer.decreaseTimes(evt.delta/1000);
 				}
-				time.set({text: timer.getFormattedTimes() });
-				if ( timer.getTimes() < 10 ) {
-					time.set({ color: "#FF3B21"});
-				}
-				else {
-					time.set({ color: "#FFD032"});
-				}
+				var color = timer.getTimeColor();
+				time.set({text: timer.getFormattedTimes(), color: color, shadow: new createjs.Shadow(color, 0, 5, 5) });
 			});
-			container.addChild(back, text, shadow, time);
+			container.addChild(back, text, time);
 			return container;
 		}
 	};
@@ -141,6 +135,7 @@
 		this.second = 0;
 		this.delta = 0;
 		this.countdown = false;
+		this.countup = false;
 		this.initalized();
 	};
 	Timer.prototype = {
@@ -148,10 +143,20 @@
 			this.second = 0;
 		},
 		decreaseTimes: function(delta) {
+			if ( this.countup ) {
+				delta *= -1;
+			}
 			this.second -= delta;
-			if ( this.second < 0) {
+			if ( this.second < 0 ) {
 				this.stopTimeover();
 			}
+		},
+		getTimeColor: function() {
+			var color = "#FFD032";
+			if ( this.second == 0 ) {
+				color = "#FF3B21";
+			}
+			return color;
 		},
 		getTimes: function() {
 			return this.second;
@@ -162,12 +167,13 @@
 				hour: this.fillZero(Math.floor(second/3600)),
 				min:  this.fillZero(Math.floor(second/60%60)),
 				sec:  this.fillZero(Math.floor(second%60)),
-				msec: Math.floor(second*10%10)
+				msec: this.fillZero(Math.floor(second*100%100))
 			};
 			
 			return [ times.hour, times.min, times.sec ].join(":") + "." + times.msec;
 		},
 		startCount: function() {
+			this.countup = false;
 			this.countdown = true;
 		},
 		stopCount: function() {
@@ -179,10 +185,14 @@
 			socketio.socket.emit("stop timer");
 		},
 		resetCount: function(time) {
+			this.countdown = this.countup = false;
 			this.second = time;
 		},
 		fillZero: function(num) {
 			return (("0"+num).slice(-2));
+		},
+		setCountup: function() {
+			this.countup = true;
 		}
 	};
 
@@ -237,7 +247,8 @@
 			this.socket
 				.on("start timer", $.proxy(this.startTimer, this))
 				.on("stop timer", $.proxy(this.stopTimer, this))
-				.on("set timer", $.proxy(this.resetTimer, this));
+				.on("set timer", $.proxy(this.resetTimer, this))
+				.on("countup timer", $.proxy(this.countupTimer, this));
 		},
 		startTimer: function() {
 			timer.startCount();
@@ -247,6 +258,9 @@
 		},
 		resetTimer: function(sec) {
 			timer.resetCount(sec);
+		},
+		countupTimer: function() {
+			timer.setCountup();
 		}
 
 	};
