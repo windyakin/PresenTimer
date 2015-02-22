@@ -14,7 +14,8 @@
 				.on("click", "#start", $.proxy(this.clickStart, this))
 				.on("click", "#stop", $.proxy(this.clickStop, this))
 				.on("click", "#countup", $.proxy(this.countupTime, this))
-				.on("click", "#countdown", $.proxy(this.countdownTime, this));
+				.on("click", "#countdown", $.proxy(this.countdownTime, this))
+				.on("click", "#twitter", $.proxy(this.searchTwitter, this));
 			// Socket受信
 			this.socket
 				.on("start timer", $.proxy(this.disabledTime, this))
@@ -52,6 +53,10 @@
 			$("#hour").removeAttr("disabled");
 			$("#min").removeAttr("disabled");
 			$("#sec").removeAttr("disabled");
+		},
+		searchTwitter: function() {
+			var track = $("#search").val();
+			this.socket.emit('twitter', track);
 		}
 	};
 
