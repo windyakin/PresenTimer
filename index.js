@@ -14,9 +14,6 @@ app.get('/control', function(req, res){
 });
 
 io.on('connection', function(socket){
-
-	console.log(socket.id);
-
 	socket
 		.on('start timer', function(){
 			io.emit('start timer');
@@ -38,7 +35,6 @@ io.on('connection', function(socket){
 	socket.on('disconnect', function(){
 		console.log('user disconnected');
 	});
-
 });
 
 http.listen(3000, function(){
