@@ -115,17 +115,18 @@
 			time.set({
 				textAlign: "center",
 				x: CONSTANT.SIZE.width/2,
-				y :CONSTANT.SIZE.height/2 - time.getMeasuredHeight()/2,
-				shadow: new createjs.Shadow("#FFD400", 0, 5, 5)
+				y :CONSTANT.SIZE.height/2 - time.getMeasuredHeight()/2
 			});
+
 			createjs.Ticker.addEventListener("tick", function(evt) {
 				if ( timer.countdown ) {
 					timer.decreaseTimes(evt.delta/1000);
 				}
 				var color = timer.getTimeColor();
-				time.set({text: timer.getFormattedTimes(), color: color, shadow: new createjs.Shadow(color, 0, 5, 5) });
+				time.set({text: timer.getFormattedTimes(), color: color });
 			});
-			container.addChild(back, text, time);
+
+			container.addChild(back, shadow, text, time);
 			return container;
 		}
 	};
