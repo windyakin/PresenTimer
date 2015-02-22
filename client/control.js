@@ -13,7 +13,8 @@
 				.on("click", "#reset", $.proxy(this.resetTime, this))
 				.on("click", "#start", $.proxy(this.clickStart, this))
 				.on("click", "#stop", $.proxy(this.clickStop, this))
-				.on("click", "#countup", $.proxy(this.countupTime, this));
+				.on("click", "#countup", $.proxy(this.countupTime, this))
+				.on("click", "#countdown", $.proxy(this.countdownTime, this));
 			// Socket受信
 			this.socket
 				.on("start timer", $.proxy(this.disabledTime, this))
@@ -38,6 +39,9 @@
 		},
 		countupTime: function() {
 			this.socket.emit('countup timer');
+		},
+		countdownTime: function() {
+			this.socket.emit('start timer');
 		},
 		disabledTime: function() {
 			$("#hour").attr("disabled", "disabled");
