@@ -22,8 +22,7 @@
 				.on("stop timer", $.proxy(this.enabledTime, this));
 		},
 		changeTime: function() {
-			var sec = Number($("#hour").val())*3600;
-			sec += Number($("#min").val())*60;
+			var sec = Number($("#min").val())*60;
 			sec += Number($("#sec").val());
 			this.socket.emit('set timer', sec);
 		},
@@ -45,12 +44,10 @@
 			this.socket.emit('start timer');
 		},
 		disabledTime: function() {
-			$("#hour").attr("disabled", "disabled");
 			$("#min").attr("disabled", "disabled");
 			$("#sec").attr("disabled", "disabled");
 		},
 		enabledTime: function() {
-			$("#hour").removeAttr("disabled");
 			$("#min").removeAttr("disabled");
 			$("#sec").removeAttr("disabled");
 		},

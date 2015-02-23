@@ -96,38 +96,40 @@
 		displayTimer: function() {
 			var container = new createjs.Container();
 			// 黒色の背景
-			var back = new createjs.Shape();
+			var back = new createjs.Shape().set({name: "background"});
 			back.graphics.f("#000").r(0, 0, CONSTANT.SIZE.width, CONSTANT.SIZE.height);
 			back.set({x: 0, y: 0});
-			var text = new createjs.Text("残り時間", "72px PixelMplus12", "#FFF");
+
+			// 非点灯セグメントの感じ
+			var shadow = this.objectTime("#222", 350, "88:88.88");
+			// 時間表示
+			var time   = this.objectTime("#222", 350);
+
+			// 「残り時間」という表示
+			var text = new createjs.Text("残り時間", "Bold 100px A-OTF 新ゴ Pr6N", "#FFF");
 			text.set({
-				textAlign: "center",
-				x: CONSTANT.SIZE.width/2,
-				y :CONSTANT.SIZE.height/2 - text.getMeasuredHeight()/2 - 300
+				x: time.getChildByName("time").x,
+				y: time.getChildByName("time").y - text.getMeasuredHeight() - 50
 			});
-			//var shadow = new createjs.Container();
-			var shadow = this.objectTime("88", "88", "88", "#111", 350);
-			var times = timer.getFormattedTimes();
-			var color = timer.getTimeColor();
-			var time = this.objectTime(times.min, times.sec, times.msec, color, 350);
-			console.log(time);
+
+			// フレームごとのイベント(これでいいのか…？)
 			createjs.Ticker.addEventListener("tick", function(evt) {
-				if ( timer.countdown ) {
-					timer.decreaseTimes(evt.delta/1000);
+				if ( timer.getStatus() != 0 ) {
+					//timer.countTime(evt.delta/10000);
 				}
 				color = timer.getTimeColor();
-				times = timer.getFormattedTimes();
-				time.getChildByName("time").set({text: times.min+":"+times.sec, color: color});
+				times = timer.getTimeFormatted();
+				time.getChildByName("time").set({text: times.time, color: color});
 				time.getChildByName("msec").set({text: times.msec, color: color});
 			});
 
 			container.addChild(back, shadow, text, time);
 			return container;
 		},
-		objectTime: function(min, sec, msec, color, size) {
+		objectTime: function(color, size, times) {
 			var container = new createjs.Container();
-			var time = new createjs.Text( min+":"+sec, "Italic Bold "+size+"px DSEG7 Classic Mini", color ).set({name: "time"});
-			var msec = new createjs.Text( msec, "Italic Bold "+(size/2)+"px DSEG7 Classic Mini", color ).set({name: "msec"});;
+			var time = new createjs.Text( "88:88", "Italic Bold "+size+"px DSEG7 Classic Mini", color ).set({name: "time"});
+			var msec = new createjs.Text( "88", "Italic Bold "+(size/2)+"px DSEG7 Classic Mini", color ).set({name: "msec"});;
 			time.set({
 				x: CONSTANT.SIZE.width/2  - time.getMeasuredWidth()/2 - msec.getMeasuredWidth()/2,
 				y :CONSTANT.SIZE.height/2 - time.getMeasuredHeight()/2
@@ -143,67 +145,112 @@
 
 	var timer, Timer = function() {
 		timer = this;
-		this.second = 0;
-		this.delta = 0;
-		this.countdown = false;
-		this.countup = false;
+		this.status  = 0;
+		this.setting = { first: 0, end: 0, discussion: 0 };
+		this.second  = 0;
+		this.countdown = true;
 		this.initalized();
 	};
 	Timer.prototype = {
 		initalized: function() {
+			this.status = 0;
+			this.setting = { first: 0, end: 0, discussion: 0 };
 			this.second = 0;
+			this.delta  = 0;
+			this.countdown = true;
 		},
-		decreaseTimes: function(delta) {
-			if ( this.countup ) {
-				delta *= -1;
+		// 経過時間
+		countTime: function(delta) {
+			this.second += delta;
+			if ( this.second <= this.setting.end - this.setting.first ) {
+				this.status = 1;
 			}
-			this.second -= delta;
-			if ( this.second < 0 ) {
-				this.stopTimeover();
+			else if ( this.second <= this.setting.end ) {
+				this.status = 2;
+			}
+			else if ( this.second <= this.setting.end + this.setting.discussion ) {
+				this.status = 3;
+			}
+			else {
+				this.second = this.setting.end + this.setting.discussion;
+				this.stopCount();
 			}
 		},
+		// タイマーの色
 		getTimeColor: function() {
-			var color = "#FFD032";
-			if ( this.second == 0 ) {
-				color = "#FF3B21";
+			var color = "#FFC107"
+			if ( this.status == 1 ) {
+				color = "#FFC107";
+			}
+			else if ( this.status == 2 ) {
+				color = "#F44336";
+			}
+			else if ( this.status == 3 ) {
+				color = "#00E5FF"
 			}
 			return color;
 		},
-		getTimes: function() {
+		// 経過時間を取得
+		getTime: function() {
 			return this.second;
 		},
-		getFormattedTimes: function() {
-			var second = this.second;
+		// フォーマット済みの経過時間を取得(表示用)
+		getTimeFormatted: function() {
+			var limit = 0;
+			var time  = this.getTime();
+			// ステータスが発表時間であればlimitは発表時間-経過時間
+			if ( this.status < 3 ) {
+				limit = this.setting.end - time;
+			}
+			// ステータスが討論時間であればlimitは討論時間-経過時間
+			else if ( this.status == 3 ) {
+				limit = time - this.setting.discussion;
+			}
+
 			var times = {
-				min:  this.fillZero(Math.floor(second/60)),
-				sec:  this.fillZero(Math.floor(second%60)),
-				msec: this.fillZero(Math.floor(second*100%100))
+				min:  this.fillZero(Math.floor(limit/60)),
+				sec:  this.fillZero(Math.floor(limit%60)),
+				msec: this.fillZero(Math.floor(limit*100%100))
 			};
-			
-			return times;
+
+			return {time: [times.min, times.sec].join(":"), msec: times.msec};
 		},
+		// タイマーをスタート
 		startCount: function() {
-			this.countup = false;
-			this.countdown = true;
+			this.second = 0;
+			this.status = 1;
 		},
+		// タイマーをストップ
 		stopCount: function() {
-			this.countdown = false;
+			this.status = 0;
+		},
+		// タイマーの時間をセット
+		setCount: function(first, end, discussion) {
+			// タイマーを止める
+			this.status = 0;
+			// 入力チェック
+			if ( end >= 6000 ) {
+				end = 5999;
+			}
+			if ( discussion >= 6000 ) {
+				discussion = 5999;
+			}
+			this.setting = {
+				first: first,
+				end: end,
+				discussion: discussion
+			};
+		},
+		getStatus: function() {
+			return this.status;
 		},
 		stopTimeover: function() {
 			this.stopCount();
 			this.resetCount(0);
 			socketio.socket.emit("stop timer");
 		},
-		resetCount: function(time) {
-			this.countdown = this.countup = false;
-			if ( time >= 6000 ) { time = 5999; }
-			this.second = time;
-		},
 		fillZero: function(num) {
 			return (("0"+num).slice(-2));
-		},
-		setCountup: function() {
-			this.countup = true;
 		}
 	};
 
@@ -281,6 +328,8 @@
 		new Timer();
 		new Easel();
 		new SocketIO();
+		window.timer = timer;
 	});
+
 
 }(jQuery, createjs, io, window, undefined));
