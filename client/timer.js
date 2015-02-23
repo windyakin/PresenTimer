@@ -103,30 +103,40 @@
 			text.set({
 				textAlign: "center",
 				x: CONSTANT.SIZE.width/2,
-				y :CONSTANT.SIZE.height/2 - text.getMeasuredHeight()/2 - 200
+				y :CONSTANT.SIZE.height/2 - text.getMeasuredHeight()/2 - 300
 			});
-			var shadow = new createjs.Text("88:88:88.88", "Italic Bold 180px DSEG7 Classic Mini", "#222");
-			shadow.set({
-				textAlign: "center",
-				x: CONSTANT.SIZE.width/2,
-				y :CONSTANT.SIZE.height/2 - shadow.getMeasuredHeight()/2
-			});
-			var time = new createjs.Text(timer.getFormattedTimes(), "Italic Bold 180px DSEG7 Classic Mini", "#FFD032");
-			time.set({
-				textAlign: "center",
-				x: CONSTANT.SIZE.width/2,
-				y :CONSTANT.SIZE.height/2 - time.getMeasuredHeight()/2
-			});
-
+			//var shadow = new createjs.Container();
+			var shadow = this.objectTime("88", "88", "88", "#111", 350);
+			var times = timer.getFormattedTimes();
+			var color = timer.getTimeColor();
+			var time = this.objectTime(times.min, times.sec, times.msec, color, 350);
+			console.log(time);
 			createjs.Ticker.addEventListener("tick", function(evt) {
 				if ( timer.countdown ) {
 					timer.decreaseTimes(evt.delta/1000);
 				}
-				var color = timer.getTimeColor();
-				time.set({text: timer.getFormattedTimes(), color: color });
+				color = timer.getTimeColor();
+				times = timer.getFormattedTimes();
+				time.getChildByName("time").set({text: times.min+":"+times.sec, color: color});
+				time.getChildByName("msec").set({text: times.msec, color: color});
 			});
 
 			container.addChild(back, shadow, text, time);
+			return container;
+		},
+		objectTime: function(min, sec, msec, color, size) {
+			var container = new createjs.Container();
+			var time = new createjs.Text( min+":"+sec, "Italic Bold "+size+"px DSEG7 Classic Mini", color ).set({name: "time"});
+			var msec = new createjs.Text( msec, "Italic Bold "+(size/2)+"px DSEG7 Classic Mini", color ).set({name: "msec"});;
+			time.set({
+				x: CONSTANT.SIZE.width/2  - time.getMeasuredWidth()/2 - msec.getMeasuredWidth()/2,
+				y :CONSTANT.SIZE.height/2 - time.getMeasuredHeight()/2
+			});
+			msec.set({
+				x: CONSTANT.SIZE.width/2  + time.getMeasuredWidth()/2 - msec.getMeasuredWidth()/2,
+				y :CONSTANT.SIZE.height/2 - msec.getMeasuredHeight()/2 + (size/4)
+			});
+			container.addChild(time, msec);
 			return container;
 		}
 	};
@@ -165,13 +175,12 @@
 		getFormattedTimes: function() {
 			var second = this.second;
 			var times = {
-				hour: this.fillZero(Math.floor(second/3600)),
-				min:  this.fillZero(Math.floor(second/60%60)),
+				min:  this.fillZero(Math.floor(second/60)),
 				sec:  this.fillZero(Math.floor(second%60)),
 				msec: this.fillZero(Math.floor(second*100%100))
 			};
 			
-			return [ times.hour, times.min, times.sec ].join(":") + "." + times.msec;
+			return times;
 		},
 		startCount: function() {
 			this.countup = false;
@@ -187,6 +196,7 @@
 		},
 		resetCount: function(time) {
 			this.countdown = this.countup = false;
+			if ( time >= 6000 ) { time = 5999; }
 			this.second = time;
 		},
 		fillZero: function(num) {
