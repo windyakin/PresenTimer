@@ -105,17 +105,38 @@
 			// 時間表示
 			var time   = this.objectTime("#222", 350);
 
+			var status = new createjs.Container().set({name: "status"});
+			// {
+			// 	var time_container = time.getBounds();
+			// 	var statusbox  = new createjs.Shape().set({name: "box"});
+			// 	statusbox.graphics.f("#FFFFFF").r(0, 0, time_container.width, 140);
+			// 	statusbox.set({x: 0, y: 0});
+			// 	var status_text = new createjs.Text("発表時間", "Bold 90px A-OTF 新ゴ Pr6N", "#CDDC39").set({name: "text"});
+			// 	status_text.set({
+			// 		textAlign: "center",
+			// 		x: time_container.width/2,
+			// 		y: 25
+			// 	});
+			// 	status.set({x: time_container.x, y: time_container.y + time_container.height + 70 });
+			// 	status.addChild(statusbox, status_text);
+			// }
+
 			// 「残り時間」という表示
-			var text = new createjs.Text("残り時間", "Bold 100px A-OTF 新ゴ Pr6N", "#FFF");
+			var text = new createjs.Text("残り時間", "Bold 100px A-OTF 新ゴ Pr6N", "#FFF").set({name: "text"});
 			text.set({
 				x: time.getChildByName("time").x,
 				y: time.getChildByName("time").y - text.getMeasuredHeight() - 50
 			});
 
+			container.addEventListener("click", function(evt) {
+				timer.toggleCountArrow();
+				container.getChildByName("text").set({text: (timer.countdown ? "残り時間" : "経過時間")})
+			});
+
 			// フレームごとのイベント(これでいいのか…？)
 			createjs.Ticker.addEventListener("tick", function(evt) {
 				if ( timer.getStatus() != 0 ) {
-					//timer.countTime(evt.delta/10000);
+					timer.countTime(evt.delta/1000);
 				}
 				color = timer.getTimeColor();
 				times = timer.getTimeFormatted();
@@ -123,7 +144,7 @@
 				time.getChildByName("msec").set({text: times.msec, color: color});
 			});
 
-			container.addChild(back, shadow, text, time);
+			container.addChild(back, shadow, text, time, status);
 			return container;
 		},
 		objectTime: function(color, size, times) {
@@ -146,7 +167,7 @@
 	var timer, Timer = function() {
 		timer = this;
 		this.status  = 0;
-		this.setting = { first: 0, end: 0, discussion: 0 };
+		this.setting = { first: 0, end: 0 };
 		this.second  = 0;
 		this.countdown = true;
 		this.initalized();
@@ -154,7 +175,7 @@
 	Timer.prototype = {
 		initalized: function() {
 			this.status = 0;
-			this.setting = { first: 0, end: 0, discussion: 0 };
+			this.setting = { first: 0, end: 0 };
 			this.second = 0;
 			this.delta  = 0;
 			this.countdown = true;
@@ -162,31 +183,34 @@
 		// 経過時間
 		countTime: function(delta) {
 			this.second += delta;
-			if ( this.second <= this.setting.end - this.setting.first ) {
+			if ( this.second <= this.setting.first ) {
 				this.status = 1;
 			}
 			else if ( this.second <= this.setting.end ) {
 				this.status = 2;
 			}
-			else if ( this.second <= this.setting.end + this.setting.discussion ) {
+			else if ( this.second > this.setting.end && this.second < 6000 ) {
 				this.status = 3;
 			}
 			else {
-				this.second = this.setting.end + this.setting.discussion;
-				this.stopCount();
+				//this.second = this.setting.end + this.setting.discussion;
+				this.stopTimeover();
 			}
 		},
 		// タイマーの色
 		getTimeColor: function() {
-			var color = "#FFC107"
+			var color = "#CDDC39";
 			if ( this.status == 1 ) {
-				color = "#FFC107";
+				// 緑
+				color = "#CDDC39";
 			}
 			else if ( this.status == 2 ) {
-				color = "#F44336";
+				// オレンジ
+				color = "#FFC107";
 			}
 			else if ( this.status == 3 ) {
-				color = "#00E5FF"
+				// 赤
+				color = "#F44336";
 			}
 			return color;
 		},
@@ -196,15 +220,30 @@
 		},
 		// フォーマット済みの経過時間を取得(表示用)
 		getTimeFormatted: function() {
-			var limit = 0;
-			var time  = this.getTime();
-			// ステータスが発表時間であればlimitは発表時間-経過時間
-			if ( this.status < 3 ) {
-				limit = this.setting.end - time;
+			var limit   = 0;
+			var status  = this.getStatus();
+			var setting = this.getSetting();
+			var time    = this.getTime();
+			if ( this.countdown ) {
+				//ステータスが発表時間であればlimitは発表時間-経過時間
+				switch (status) {
+					case 0:
+						limit = setting.end;
+						break;
+					case 1:
+					case 2:
+						limit = setting.end - time;
+						break;
+					case 3:
+						limit = time - setting.end;
+						break;
+					case 4:
+						limit = setting.end;
+						break;
+				}
 			}
-			// ステータスが討論時間であればlimitは討論時間-経過時間
-			else if ( this.status == 3 ) {
-				limit = time - this.setting.discussion;
+			else {
+				limit = time;
 			}
 
 			var times = {
@@ -241,8 +280,19 @@
 				discussion: discussion
 			};
 		},
+		toggleCountArrow: function() {
+			if ( this.countdown ) {
+				this.countdown = false;
+			}
+			else {
+				this.countdown = true;
+			}
+		},
 		getStatus: function() {
 			return this.status;
+		},
+		getSetting: function() {
+			return this.setting;
 		},
 		stopTimeover: function() {
 			this.stopCount();
