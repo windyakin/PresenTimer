@@ -6,7 +6,7 @@
 			width: 1920,
 			height: 1080
 		},
-		fps: 60,
+		fps: 30,
 		SCREEN: {
 			LOADING: 0,
 			TITLE:   1,
@@ -135,7 +135,7 @@
 
 			// フレームごとのイベント(これでいいのか…？)
 			createjs.Ticker.addEventListener("tick", function(evt) {
-				if ( timer.getStatus() != 0 ) {
+				if ( timer.getStatus() > 0 ) {
 					timer.countTime(evt.delta/1000);
 				}
 				color = timer.getTimeColor();
@@ -168,6 +168,7 @@
 		timer = this;
 		this.status  = 0;
 		this.setting = { first: 0, end: 0 };
+		this.modelt  = true;
 		this.second  = 0;
 		this.countdown = true;
 		this.initalized();
@@ -176,21 +177,29 @@
 		initalized: function() {
 			this.status = 0;
 			this.setting = { first: 0, end: 0 };
+			this.modelt = true;
 			this.second = 0;
-			this.delta  = 0;
 			this.countdown = true;
 		},
 		// 経過時間
 		countTime: function(delta) {
-			this.second += delta;
-			if ( this.second <= this.setting.first ) {
-				this.status = 1;
+			var second = this.getTime();
+			second += delta;
+			this.setTime(delta);
+			var setting = this.getSetting();
+
+			if ( second <= setting.first ) {
+				this.setStatus(1);
 			}
-			else if ( this.second <= this.setting.end ) {
-				this.status = 2;
+			else if ( second <= setting.end ) {
+				this.setStatus(2);
 			}
-			else if ( this.second > this.setting.end && this.second < 6000 ) {
-				this.status = 3;
+			else if ( second > setting.end && second < 6000 ) {
+				this.setStatus(3);
+				// LTモードだったら別処理
+				if ( this.modelt ) {
+					this.stopTimeover();
+				}
 			}
 			else {
 				//this.second = this.setting.end + this.setting.discussion;
@@ -199,24 +208,24 @@
 		},
 		// タイマーの色
 		getTimeColor: function() {
-			var color = "#CDDC39";
-			if ( this.status == 1 ) {
+			var status = this.getStatus();
+			var color  = "#CDDC39";
+			if ( status == 1 ) {
 				// 緑
 				color = "#CDDC39";
 			}
-			else if ( this.status == 2 ) {
+			else if ( status == 2 ) {
 				// オレンジ
 				color = "#FFC107";
 			}
-			else if ( this.status == 3 ) {
+			else if ( status == 3 ) {
 				// 赤
 				color = "#F44336";
 			}
+			else if ( status < 0 ) {
+				color = "#F44336";
+			}
 			return color;
-		},
-		// 経過時間を取得
-		getTime: function() {
-			return this.second;
 		},
 		// フォーマット済みの経過時間を取得(表示用)
 		getTimeFormatted: function() {
@@ -227,6 +236,9 @@
 			if ( this.countdown ) {
 				//ステータスが発表時間であればlimitは発表時間-経過時間
 				switch (status) {
+					case -1:
+						limit = 0;
+						break;
 					case 0:
 						limit = setting.end;
 						break;
@@ -237,7 +249,7 @@
 					case 3:
 						limit = time - setting.end;
 						break;
-					case 4:
+					default:
 						limit = setting.end;
 						break;
 				}
@@ -263,8 +275,50 @@
 		stopCount: function() {
 			this.status = 0;
 		},
-		// タイマーの時間をセット
-		setCount: function(first, end, discussion) {
+		// タイムオーバーの処理
+		stopTimeover: function() {
+			this.status = -1;
+			this.second = this.setting.end;
+		},
+		// 残り時間表示と経過時間表示を切り替え
+		toggleCountArrow: function() {
+			if ( this.countdown ) {
+				this.countdown = false;
+			}
+			else {
+				this.countdown = true;
+			}
+		},
+		toggleLTMode: function() {
+			if ( this.modelet ) {
+				this.modelet = false;
+			}
+			else {
+				this.modelet = true;
+			}
+		},
+		// 経過時間を取得
+		getTime: function() {
+			return this.second;
+		},
+		// 経過時間をセット
+		setTime: function(time) {
+			this.second = time;
+		},
+		// ステータスを取得
+		getStatus: function() {
+			return this.status;
+		},
+		// ステータスをセット
+		setStatus: function(status) {
+			this.status = status;
+		}
+		// タイマーの設定を取得
+		getSetting: function() {
+			return this.setting;
+		},
+		// タイマーの設定をセット
+		setSetting: function(first, end, discussion) {
 			// タイマーを止める
 			this.status = 0;
 			// 入力チェック
@@ -279,25 +333,6 @@
 				end: end,
 				discussion: discussion
 			};
-		},
-		toggleCountArrow: function() {
-			if ( this.countdown ) {
-				this.countdown = false;
-			}
-			else {
-				this.countdown = true;
-			}
-		},
-		getStatus: function() {
-			return this.status;
-		},
-		getSetting: function() {
-			return this.setting;
-		},
-		stopTimeover: function() {
-			this.stopCount();
-			this.resetCount(0);
-			socketio.socket.emit("stop timer");
 		},
 		fillZero: function(num) {
 			return (("0"+num).slice(-2));
