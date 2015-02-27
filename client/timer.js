@@ -322,7 +322,8 @@
 		// タイマーの設定をセット
 		setSetting: function(times) {
 			// タイマーを止める
-			this.status = 0;
+			this.setStatus(0);
+			this.setTime(0);
 			// 入力チェック
 			if ( times.end >= 6000 ) {
 				times.end = 5999;
@@ -414,7 +415,6 @@
 			timer.stopCount();
 		},
 		setTimer: function(times) {
-			console.log("welcome!");
 			timer.setSetting(times);
 		},
 		countupTimer: function() {
