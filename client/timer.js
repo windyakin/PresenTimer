@@ -183,9 +183,11 @@
 		},
 		// 経過時間
 		countTime: function(delta) {
+
 			var second = this.getTime();
 			second += delta;
-			this.setTime(delta);
+			this.setTime(second);
+
 			var setting = this.getSetting();
 
 			if ( second <= setting.first ) {
@@ -312,27 +314,23 @@
 		// ステータスをセット
 		setStatus: function(status) {
 			this.status = status;
-		}
+		},
 		// タイマーの設定を取得
 		getSetting: function() {
 			return this.setting;
 		},
 		// タイマーの設定をセット
-		setSetting: function(first, end, discussion) {
+		setSetting: function(times) {
 			// タイマーを止める
 			this.status = 0;
 			// 入力チェック
-			if ( end >= 6000 ) {
-				end = 5999;
+			if ( times.end >= 6000 ) {
+				times.end = 5999;
 			}
-			if ( discussion >= 6000 ) {
-				discussion = 5999;
+			if ( times.discussion >= 6000 ) {
+				times.discussion = 5999;
 			}
-			this.setting = {
-				first: first,
-				end: end,
-				discussion: discussion
-			};
+			this.setting = times;
 		},
 		fillZero: function(num) {
 			return (("0"+num).slice(-2));
@@ -387,11 +385,27 @@
 	};
 	SocketIO.prototype = {
 		initalized: function() {
-			this.socket
-				.on("start timer", $.proxy(this.startTimer, this))
-				.on("stop timer", $.proxy(this.stopTimer, this))
-				.on("set timer", $.proxy(this.resetTimer, this))
-				.on("countup timer", $.proxy(this.countupTimer, this));
+			this.socket.on('timer', $.proxy(function(command, times) {
+				switch( command ) {
+					case "start":
+						this.startTimer();
+						break;
+					case "stop":
+						this.stopTimer();
+						break;
+					case "set":
+						this.setTimer(times);
+						break;
+					case 'countup':
+						this.countup();
+						break;
+					default:
+						console.log(command + 'is not found.');
+						break;
+				}
+			}, this));
+			// this.socket
+			// 	.on('timer', $.proxy(this.switchTimer, this));
 		},
 		startTimer: function() {
 			timer.startCount();
@@ -399,11 +413,12 @@
 		stopTimer: function() {
 			timer.stopCount();
 		},
-		resetTimer: function(sec) {
-			timer.resetCount(sec);
+		setTimer: function(times) {
+			console.log("welcome!");
+			timer.setSetting(times);
 		},
 		countupTimer: function() {
-			timer.setCountup();
+			timer.toggleCountArrow();
 		}
 
 	};

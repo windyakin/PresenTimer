@@ -9,7 +9,7 @@
 		initalized: function() {
 			// Socket送信
 			$(document)
-				.on("change", "#hour, #min, #sec", $.proxy(this.changeTime, this))
+				.on("change", "#first, #end", $.proxy(this.changeTime, this))
 				.on("click", "#reset", $.proxy(this.resetTime, this))
 				.on("click", "#start", $.proxy(this.clickStart, this))
 				.on("click", "#stop", $.proxy(this.clickStop, this))
@@ -22,34 +22,36 @@
 				.on("stop timer", $.proxy(this.enabledTime, this));
 		},
 		changeTime: function() {
-			var sec = Number($("#min").val())*60;
-			sec += Number($("#sec").val());
-			this.socket.emit('set timer', sec);
+			var times = {
+				first: Number($("#first").val())*60,
+				end:   Number($("#end").val())*60
+			};
+			this.socket.emit('timer', 'set', times);
 		},
 		resetTime: function() {
-			$("#hour, #min, #sec").val("0");
-			this.socket.emit('set timer', 0);
+			$("#first, #end").val("0");
+			this.socket.emit('timer', 'set', {first: 0, end: 0});
 		},
 		clickStart: function() {
 			this.changeTime();
-			this.socket.emit('start timer');
+			this.socket.emit('timer', 'start');
 		},
 		clickStop: function() {
-			this.socket.emit('stop timer');
+			this.socket.emit('timer', 'stop');
 		},
 		countupTime: function() {
-			this.socket.emit('countup timer');
+			this.socket.emit('timer', 'countup');
 		},
 		countdownTime: function() {
-			this.socket.emit('start timer');
+			this.socket.emit('timer', 'start');
 		},
 		disabledTime: function() {
-			$("#min").attr("disabled", "disabled");
-			$("#sec").attr("disabled", "disabled");
+			$("#first").attr("disabled", "disabled");
+			$("#end").attr("disabled", "disabled");
 		},
 		enabledTime: function() {
-			$("#min").removeAttr("disabled");
-			$("#sec").removeAttr("disabled");
+			$("#first").removeAttr("disabled");
+			$("#end").removeAttr("disabled");
 		},
 		searchTwitter: function() {
 			var track = $("#search").val();

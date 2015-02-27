@@ -15,6 +15,29 @@ app.get('/control', function(req, res){
 
 io.on('connection', function(socket){
 	socket
+		.on('timer', function(command, time) {
+			switch( command ) {
+				case "start":
+					io.emit('timer', 'start');
+					console.log("start");
+					break;
+				case "stop":
+					io.emit('timer', 'stop');
+					console.log('stop');
+					break;
+				case "set":
+					io.emit('timer', 'set', time);
+					console.log(time);
+					break;
+				case 'countup':
+					io.emit('timer', 'countup');
+					console.log('countup');
+					break;
+				default:
+					console.log(command + 'is not found.');
+					break;
+			}
+		})
 		.on('start timer', function(){
 			io.emit('start timer');
 			console.log("start");
