@@ -5,6 +5,7 @@ var io = require('socket.io')(http);
 
 app.use('/lib', express.static(__dirname + '/lib'));
 app.use('/client', express.static(__dirname + '/client'));
+app.use('/assets', express.static(__dirname + '/assets'));
 
 app.get('/', function(req, res){
 	res.sendfile('index.html');

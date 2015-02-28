@@ -14,7 +14,9 @@
 		}
 	};
 
-	var manifest = [{}];
+	var manifest = [
+		{id: "Gong", src: "/assets/Gong.ogg"}
+	];
 
 	var _SCREENSTATUS = CONSTANT.SCREEN.LOADING;
 	var _SCREENSTATUS_OLD = null;
@@ -281,6 +283,7 @@
 		stopTimeover: function() {
 			this.status = -1;
 			this.second = this.setting.end;
+			createjs.Sound.play("Gong");
 		},
 		// 残り時間表示と経過時間表示を切り替え
 		toggleCountArrow: function() {
@@ -350,13 +353,18 @@
 			// Preload.js
 			this.load = new createjs.LoadQueue();
 
+			createjs.Sound.alternateExtensions = ["mp3"];
+
 			// 最大並列接続数
 			this.load.setMaxConnections(6);
+
+			// Sound.jsのインストール
+			this.load.installPlugin(createjs.Sound);
 
 			// 読み込みの進行状況が変化した
 			this.load.addEventListener("progress", this.handleProgress);
 			// 1つのファイルを読み込み終わったら
-			this.load.addEventListener("fileload", this.handleFileLoadComplete);
+			//this.load.addEventListener("fileload", this.handleFileLoadComplete);
 			// 全てのファイルを読み込み終わったら
 			this.load.addEventListener("complete", this.handleComplete);
 
