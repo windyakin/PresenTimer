@@ -38,24 +38,8 @@ io.on('connection', function(socket){
 					console.log(command + 'is not found.');
 					break;
 			}
-		})
-		.on('start timer', function(){
-			io.emit('start timer');
-			console.log("start");
-		})
-		.on('stop timer', function(){
-			io.emit('stop timer');
-			console.log("stop");
-		})
-		.on('set timer', function(sec) {
-			io.emit('set timer', sec)
-			console.log("set "+sec+"sec");
-		})
-		.on('countup timer', function(sec) {
-			io.emit('countup timer', sec)
-			console.log("countup");
 		});
-
+	
 	socket.on('disconnect', function(){
 		console.log('user disconnected');
 	});
