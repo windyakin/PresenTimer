@@ -15,7 +15,8 @@
 	};
 
 	var manifest = [
-		{id: "Gong", src: "/assets/Gong.ogg"}
+		{id: "Gong", src: "/assets/Gong.ogg"},
+		{id: "Twitter", src: "/assets/Twitter.png"}
 	];
 
 	var _SCREENSTATUS = CONSTANT.SCREEN.LOADING;
@@ -107,32 +108,22 @@
 			// 時間表示
 			var time   = this.objectTime("#222", 350);
 
-			var status = new createjs.Container().set({name: "status"});
-			// {
-			// 	var time_container = time.getBounds();
-			// 	var statusbox  = new createjs.Shape().set({name: "box"});
-			// 	statusbox.graphics.f("#FFFFFF").r(0, 0, time_container.width, 140);
-			// 	statusbox.set({x: 0, y: 0});
-			// 	var status_text = new createjs.Text("発表時間", "Bold 90px A-OTF 新ゴ Pr6N", "#CDDC39").set({name: "text"});
-			// 	status_text.set({
-			// 		textAlign: "center",
-			// 		x: time_container.width/2,
-			// 		y: 25
-			// 	});
-			// 	status.set({x: time_container.x, y: time_container.y + time_container.height + 70 });
-			// 	status.addChild(statusbox, status_text);
-			// }
+			var word = new createjs.Text("#Twitter", "Bold 100px 源ノ角ゴシック JP", "#55ACEE").set({name: "word"});
+			word.set({
+				textAlign: "center",
+				x: CONSTANT.SIZE.width/2,
+				y: CONSTANT.SIZE.height/2 + time.getBounds().height/2 + 80
+			});
 
 			// 「残り時間」という表示
 			var text = new createjs.Text("残り時間", "Bold 100px A-OTF 新ゴ Pr6N", "#FFF").set({name: "text"});
 			text.set({
 				x: time.getChildByName("time").x,
-				y: time.getChildByName("time").y - text.getMeasuredHeight() - 50
+				y: time.getChildByName("time").y - text.getMeasuredHeight() - 70
 			});
 
 			container.addEventListener("click", function(evt) {
 				timer.toggleCountArrow();
-				container.getChildByName("text").set({text: (timer.countdown ? "残り時間" : "経過時間")})
 			});
 
 			// フレームごとのイベント(これでいいのか…？)
@@ -144,9 +135,11 @@
 				times = timer.getTimeFormatted();
 				time.getChildByName("time").set({text: times.time, color: color});
 				time.getChildByName("msec").set({text: times.msec, color: color});
+				container.getChildByName("text").set({text: (timer.countdown ? "残り時間" : "経過時間")});
+				container.getChildByName("word").set({text: twitter.getWord()});
 			});
 
-			container.addChild(back, shadow, text, time, status);
+			container.addChild(back, shadow, text, time, word);
 			return container;
 		},
 		objectTime: function(color, size, times) {
@@ -387,6 +380,33 @@
 		}
 	}
 
+	var twitter, Twitter = function() {
+		twitter = this;
+		this.word = null;
+		this.delta = 0;
+		this.initalized();
+	};
+	Twitter.prototype = {
+		initalized: function() {
+			this.word = "ラブライブ";
+		},
+		setWord: function(word) {
+			this.word = word;
+		},
+		getWord: function() {
+			return this.word;
+		},
+		hitTweet: function() {
+			if ( timer.getStatus() > 0 ) {
+				this.delta += 0.5;
+				if ( this.delta >= 1 ) {
+					timer.countTime(-1);
+					this.delta = 0;
+				}
+			}
+		}
+	};
+
 	var socketio, SocketIO = function() {
 		socketio = this;
 		this.socket = io();
@@ -394,49 +414,69 @@
 	};
 	SocketIO.prototype = {
 		initalized: function() {
-			this.socket.on('timer', $.proxy(function(command, times) {
-				switch( command ) {
-					case "start":
-						this.startTimer();
-						break;
-					case "stop":
-						this.stopTimer();
-						break;
-					case "set":
-						this.setTimer(times);
-						break;
-					case 'countup':
-						this.countup();
-						break;
-					default:
-						console.log(command + 'is not found.');
-						break;
-				}
-			}, this));
-			// this.socket
-			// 	.on('timer', $.proxy(this.switchTimer, this));
+			this.socket
+				.on('timer', $.proxy(function(command, times) {
+					switch( command ) {
+						case "start":
+							this.startTimer();
+							break;
+						case "stop":
+							this.stopTimer();
+							break;
+						case "set":
+							this.setTimer(times);
+							break;
+						case 'countup':
+							this.countup();
+							break;
+						default:
+							console.log(command + ' is not found.');
+							break;
+					}
+				}, this))
+				.on('twitter', $.proxy(function(command, word) {
+					switch( command ) {
+						case 'search':
+							this.searchTwitter(word);
+							break;
+						case 'hit':
+							this.hitTweet(word);
+							break;
+						default:
+							console.log(command + ' is not found.');
+							break;
+					}
+				}, this));
 		},
 		startTimer: function() {
 			timer.startCount();
 		},
 		stopTimer: function() {
 			timer.stopCount();
+			this.socket.emit('twitter', 'stop');
 		},
 		setTimer: function(times) {
 			timer.setSetting(times);
 		},
 		countupTimer: function() {
 			timer.toggleCountArrow();
+		},
+		searchTwitter: function(word) {
+			twitter.setWord(word);
+		},
+		hitTweet: function(tweet) {
+			twitter.hitTweet(tweet);
 		}
-
 	};
 
 	$(document).ready(function(e){
 		new Preload();
 		new Timer();
+		new Twitter();
 		new Easel();
 		new SocketIO();
 		window.timer = timer;
+		window.twitter = twitter;
 	});
 
 
