@@ -54,8 +54,8 @@
 			$("#end").removeAttr("disabled");
 		},
 		searchTwitter: function() {
-			var word = $("#search").val();
-			this.socket.emit('twitter', "search", word);
+			var track = $("#search").val();
+			this.socket.emit('twitter', track);
 		}
 	};
 
