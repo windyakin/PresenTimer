@@ -1,4 +1,4 @@
-(function($, createjs, io, window, undefined){
+(function($, createjs, io, window, undefined) {
 
 	// 定数定義
 	var CONSTANT = {
@@ -15,46 +15,54 @@
 	};
 
 	var manifest = [
-		{id: "Gong", src: "/assets/Gong.ogg"}
+		{id: 'Gong', src: '/assets/Gong.ogg'}
 	];
 
 	var _SCREENSTATUS = CONSTANT.SCREEN.LOADING;
 	var _SCREENSTATUS_OLD = null;
 
-	var easel, Easel = function() {
-		easel = this;
+	var preload, timer, easel, socketio;
+
+	var Easel = function() {
 		this.stage = null;
 		this.initalized();
+		return this;
 	};
 	Easel.prototype = {
 		// 初期化
 		initalized: function() {
 			// 画面領域の設定(Retinaの対応)
-			$("#game").attr({width: CONSTANT.SIZE.width, height: CONSTANT.SIZE.height}).css({width: CONSTANT.SIZE.width/2, height:CONSTANT.SIZE.height/2});
+			$('#game').attr({
+				width: CONSTANT.SIZE.width,
+				height: CONSTANT.SIZE.height}
+			).css({
+				width: CONSTANT.SIZE.width / 2,
+				height: CONSTANT.SIZE.height / 2
+			});
 			// ステージの作成
-			this.stage = new createjs.Stage($("#game").get(0));
+			this.stage = new createjs.Stage($('#game').get(0));
 			// 入力の受付
 			createjs.Touch.enable(this.stage);
 			// FPSの設定
 			createjs.Ticker.setFPS(CONSTANT.fps);
 			// ticker
-			createjs.Ticker.addEventListener("tick", $.proxy(this.transitScreen, this));
+			createjs.Ticker.addEventListener('tick', $.proxy(this.transitScreen, this));
 		},
 		transitScreen: function(event) {
 			// 画面が変更されたら
-			if ( _SCREENSTATUS != _SCREENSTATUS_OLD ) {
+			if (_SCREENSTATUS !== _SCREENSTATUS_OLD) {
 				// ローディング画面
-				if ( _SCREENSTATUS == CONSTANT.SCREEN.LOADING ) {
+				if (_SCREENSTATUS === CONSTANT.SCREEN.LOADING) {
 					this.stage.removeAllChildren();
 					this.stage.addChild(this.displayLoading());
 				}
 				// タイトル画面
-				else if ( _SCREENSTATUS == CONSTANT.SCREEN.TITLE ) {
+				else if (_SCREENSTATUS === CONSTANT.SCREEN.TITLE) {
 					this.stage.removeAllChildren();
 					this.stage.addChild(this.displayTitle());
 				}
 				// タイマー
-				else if ( _SCREENSTATUS == CONSTANT.SCREEN.TIMER ) {
+				else if (_SCREENSTATUS === CONSTANT.SCREEN.TIMER) {
 					this.stage.removeAllChildren();
 					this.stage.addChild(this.displayTimer());
 				}
@@ -69,19 +77,19 @@
 			var container = new createjs.Container();
 			// 黒色の背景
 			var back = new createjs.Shape();
-			back.graphics.f("#000").r(0, 0, CONSTANT.SIZE.width, CONSTANT.SIZE.height);
+			back.graphics.f('#000').r(0, 0, CONSTANT.SIZE.width, CONSTANT.SIZE.height);
 			back.set({x: 0, y: 0});
-			var text = new createjs.Text("よみこみかんりょう！", "48px PixelMplus12", "#fff");
+			var text = new createjs.Text('よみこみかんりょう！', '48px PixelMplus12', '#fff');
 			text.set({
-				textAlign: "center",
-				x: CONSTANT.SIZE.width/2,
-				y :CONSTANT.SIZE.height/2 - text.getMeasuredHeight()/2,
+				textAlign: 'center',
+				x: CONSTANT.SIZE.width / 2,
+				y :CONSTANT.SIZE.height / 2 - text.getMeasuredHeight() / 2,
 			});
-			var start = new createjs.Text("クリックでスタート", "48px PixelMplus12", "#fff");
+			var start = new createjs.Text('クリックでスタート', '48px PixelMplus12', '#fff');
 			start.set({
-				textAlign: "center",
-				x: CONSTANT.SIZE.width/2,
-				y :CONSTANT.SIZE.height/2 - text.getMeasuredHeight()/2 + 280,
+				textAlign: 'center',
+				x: CONSTANT.SIZE.width / 2,
+				y :CONSTANT.SIZE.height / 2 - text.getMeasuredHeight() / 2 + 280,
 			});
 			createjs.Tween.get(start, {loop: true})
 				.to({alpha: 1}, 300)
@@ -89,7 +97,7 @@
 				.to({alpha: 1}, 300);
 
 			container.addChild(back, start, text);
-			container.addEventListener("click", function(event) {
+			container.addEventListener('click', function(event) {
 				_SCREENSTATUS = CONSTANT.SCREEN.TIMER;
 			});
 
@@ -98,24 +106,24 @@
 		displayTimer: function() {
 			var container = new createjs.Container();
 			// 黒色の背景
-			var back = new createjs.Shape().set({name: "background"});
-			back.graphics.f("#000").r(0, 0, CONSTANT.SIZE.width, CONSTANT.SIZE.height);
+			var back = new createjs.Shape().set({name: 'background'});
+			back.graphics.f('#000').r(0, 0, CONSTANT.SIZE.width, CONSTANT.SIZE.height);
 			back.set({x: 0, y: 0});
 
 			// 非点灯セグメントの感じ
-			var shadow = this.objectTime("#222", 350, "88:88.88");
+			var shadow = this.objectTime('#222', 350, '88:88.88');
 			// 時間表示
-			var time   = this.objectTime("#222", 350);
+			var time   = this.objectTime('#222', 350);
 
-			var status = new createjs.Container().set({name: "status"});
+			var status = new createjs.Container().set({name: 'status'});
 			// {
 			// 	var time_container = time.getBounds();
-			// 	var statusbox  = new createjs.Shape().set({name: "box"});
-			// 	statusbox.graphics.f("#FFFFFF").r(0, 0, time_container.width, 140);
+			// 	var statusbox  = new createjs.Shape().set({name: 'box'});
+			// 	statusbox.graphics.f('#FFFFFF').r(0, 0, time_container.width, 140);
 			// 	statusbox.set({x: 0, y: 0});
-			// 	var status_text = new createjs.Text("発表時間", "Bold 90px A-OTF 新ゴ Pr6N", "#CDDC39").set({name: "text"});
+			// 	var status_text = new createjs.Text('発表時間', 'Bold 90px A-OTF 新ゴ Pr6N', '#CDDC39').set({name: 'text'});
 			// 	status_text.set({
-			// 		textAlign: "center",
+			// 		textAlign: 'center',
 			// 		x: time_container.width/2,
 			// 		y: 25
 			// 	});
@@ -124,26 +132,26 @@
 			// }
 
 			// 「残り時間」という表示
-			var text = new createjs.Text("残り時間", "Bold 100px A-OTF 新ゴ Pr6N", "#FFF").set({name: "text"});
+			var text = new createjs.Text('残り時間', 'Bold 100px A-OTF 新ゴ Pr6N', '#FFF').set({name: 'text'});
 			text.set({
-				x: time.getChildByName("time").x,
-				y: time.getChildByName("time").y - text.getMeasuredHeight() - 50
+				x: time.getChildByName('time').x,
+				y: time.getChildByName('time').y - text.getMeasuredHeight() - 50
 			});
 
-			container.addEventListener("click", function(evt) {
+			container.addEventListener('click', function(evt) {
 				timer.toggleCountArrow();
-				container.getChildByName("text").set({text: (timer.countdown ? "残り時間" : "経過時間")})
+				container.getChildByName('text').set({text: (timer.countdown ? '残り時間' : '経過時間')});
 			});
 
 			// フレームごとのイベント(これでいいのか…？)
-			createjs.Ticker.addEventListener("tick", function(evt) {
-				if ( timer.getStatus() > 0 ) {
-					timer.countTime(evt.delta/1000);
+			createjs.Ticker.addEventListener('tick', function(evt) {
+				if (timer.getStatus() > 0) {
+					timer.countTime(evt.delta / 1000);
 				}
-				color = timer.getTimeColor();
-				times = timer.getTimeFormatted();
-				time.getChildByName("time").set({text: times.time, color: color});
-				time.getChildByName("msec").set({text: times.msec, color: color});
+				var color = timer.getTimeColor();
+				var times = timer.getTimeFormatted();
+				time.getChildByName('time').set({text: times.time, color: color});
+				time.getChildByName('msec').set({text: times.msec, color: color});
 			});
 
 			container.addChild(back, shadow, text, time, status);
@@ -151,29 +159,29 @@
 		},
 		objectTime: function(color, size, times) {
 			var container = new createjs.Container();
-			var time = new createjs.Text( "88:88", "Italic Bold "+size+"px DSEG7 Classic Mini", color ).set({name: "time"});
-			var msec = new createjs.Text( "88", "Italic Bold "+(size/2)+"px DSEG7 Classic Mini", color ).set({name: "msec"});;
+			var time = new createjs.Text('88:88', 'Italic Bold ' + size + 'px DSEG7 Classic Mini', color).set({name: 'time'});
+			var msec = new createjs.Text('88', 'Italic Bold ' + (size / 2) + 'px DSEG7 Classic Mini', color).set({name: 'msec'});;
 			time.set({
-				x: CONSTANT.SIZE.width/2  - time.getMeasuredWidth()/2 - msec.getMeasuredWidth()/2,
-				y :CONSTANT.SIZE.height/2 - time.getMeasuredHeight()/2
+				x: CONSTANT.SIZE.width / 2  - time.getMeasuredWidth() / 2 - msec.getMeasuredWidth() / 2,
+				y :CONSTANT.SIZE.height / 2 - time.getMeasuredHeight() / 2
 			});
 			msec.set({
-				x: CONSTANT.SIZE.width/2  + time.getMeasuredWidth()/2 - msec.getMeasuredWidth()/2,
-				y :CONSTANT.SIZE.height/2 - msec.getMeasuredHeight()/2 + (size/4)
+				x: CONSTANT.SIZE.width / 2  + time.getMeasuredWidth() / 2 - msec.getMeasuredWidth() / 2,
+				y :CONSTANT.SIZE.height / 2 - msec.getMeasuredHeight() / 2 + (size / 4)
 			});
 			container.addChild(time, msec);
 			return container;
 		}
 	};
 
-	var timer, Timer = function() {
-		timer = this;
+	var Timer = function() {
 		this.status  = 0;
 		this.setting = { first: 0, end: 0 };
 		this.modelt  = true;
 		this.second  = 0;
 		this.countdown = true;
 		this.initalized();
+		return this;
 	};
 	Timer.prototype = {
 		initalized: function() {
@@ -192,42 +200,42 @@
 
 			var setting = this.getSetting();
 
-			if ( second <= setting.first ) {
+			if (second <= setting.first) {
 				this.setStatus(1);
 			}
-			else if ( second <= setting.end ) {
+			else if (second <= setting.end) {
 				this.setStatus(2);
 			}
-			else if ( second > setting.end && second < 6000 ) {
+			else if (second > setting.end && second < 6000) {
 				this.setStatus(3);
 				// LTモードだったら別処理
-				if ( this.modelt ) {
+				if (this.modelt) {
 					this.stopTimeover();
 				}
 			}
 			else {
-				//this.second = this.setting.end + this.setting.discussion;
+				// this.second = this.setting.end + this.setting.discussion;
 				this.stopTimeover();
 			}
 		},
 		// タイマーの色
 		getTimeColor: function() {
 			var status = this.getStatus();
-			var color  = "#CDDC39";
-			if ( status == 1 ) {
+			var color  = '#CDDC39';
+			if (status === 1) {
 				// 緑
-				color = "#CDDC39";
+				color = '#CDDC39';
 			}
-			else if ( status == 2 ) {
+			else if (status === 2) {
 				// オレンジ
-				color = "#FFC107";
+				color = '#FFC107';
 			}
-			else if ( status == 3 ) {
+			else if (status === 3) {
 				// 赤
-				color = "#F44336";
+				color = '#F44336';
 			}
-			else if ( status < 0 ) {
-				color = "#F44336";
+			else if (status < 0) {
+				color = '#F44336';
 			}
 			return color;
 		},
@@ -237,25 +245,25 @@
 			var status  = this.getStatus();
 			var setting = this.getSetting();
 			var time    = this.getTime();
-			if ( this.countdown ) {
-				//ステータスが発表時間であればlimitは発表時間-経過時間
+			if (this.countdown) {
+				// ステータスが発表時間であればlimitは発表時間-経過時間
 				switch (status) {
-					case -1:
-						limit = 0;
-						break;
-					case 0:
-						limit = setting.end;
-						break;
-					case 1:
-					case 2:
-						limit = setting.end - time;
-						break;
-					case 3:
-						limit = time - setting.end;
-						break;
-					default:
-						limit = setting.end;
-						break;
+				case -1:
+					limit = 0;
+					break;
+				case 0:
+					limit = setting.end;
+					break;
+				case 1:
+				case 2:
+					limit = setting.end - time;
+					break;
+				case 3:
+					limit = time - setting.end;
+					break;
+				default:
+					limit = setting.end;
+					break;
 				}
 			}
 			else {
@@ -263,12 +271,12 @@
 			}
 
 			var times = {
-				min:  this.fillZero(Math.floor(limit/60)),
-				sec:  this.fillZero(Math.floor(limit%60)),
-				msec: this.fillZero(Math.floor(limit*100%100))
+				min:  this.fillZero(Math.floor(limit / 60)),
+				sec:  this.fillZero(Math.floor(limit % 60)),
+				msec: this.fillZero(Math.floor(limit * 100 % 100))
 			};
 
-			return {time: [times.min, times.sec].join(":"), msec: times.msec};
+			return {time: [times.min, times.sec].join(':'), msec: times.msec};
 		},
 		// タイマーをスタート
 		startCount: function() {
@@ -283,11 +291,11 @@
 		stopTimeover: function() {
 			this.status = -1;
 			this.second = this.setting.end;
-			createjs.Sound.play("Gong");
+			createjs.Sound.play('Gong');
 		},
 		// 残り時間表示と経過時間表示を切り替え
 		toggleCountArrow: function() {
-			if ( this.countdown ) {
+			if (this.countdown) {
 				this.countdown = false;
 			}
 			else {
@@ -295,7 +303,7 @@
 			}
 		},
 		toggleLTMode: function() {
-			if ( this.modelet ) {
+			if (this.modelet) {
 				this.modelet = false;
 			}
 			else {
@@ -328,24 +336,24 @@
 			this.setStatus(0);
 			this.setTime(0);
 			// 入力チェック
-			if ( times.end >= 6000 ) {
+			if (times.end >= 6000) {
 				times.end = 5999;
 			}
-			if ( times.discussion >= 6000 ) {
+			if (times.discussion >= 6000) {
 				times.discussion = 5999;
 			}
 			this.setting = times;
 		},
 		fillZero: function(num) {
-			return (("0"+num).slice(-2));
+			return (('0' + num).slice(-2));
 		}
 	};
 
 	// Preload.js
-	var preload, Preload = function() {
-		preload = this;
+	var Preload = function() {
 		this.load = null;
 		this.initalized();
+		return this;
 	};
 	Preload.prototype = {
 		// 初期化
@@ -353,7 +361,7 @@
 			// Preload.js
 			this.load = new createjs.LoadQueue();
 
-			createjs.Sound.alternateExtensions = ["mp3"];
+			createjs.Sound.alternateExtensions = ['mp3'];
 
 			// 最大並列接続数
 			this.load.setMaxConnections(6);
@@ -362,11 +370,11 @@
 			this.load.installPlugin(createjs.Sound);
 
 			// 読み込みの進行状況が変化した
-			this.load.addEventListener("progress", this.handleProgress);
+			this.load.addEventListener('progress', this.handleProgress);
 			// 1つのファイルを読み込み終わったら
-			//this.load.addEventListener("fileload", this.handleFileLoadComplete);
+			// this.load.addEventListener('fileload', this.handleFileLoadComplete);
 			// 全てのファイルを読み込み終わったら
-			this.load.addEventListener("complete", this.handleComplete);
+			this.load.addEventListener('complete', this.handleComplete);
 
 			// 読み込み開始
 			this.load.loadManifest(manifest);
@@ -385,32 +393,32 @@
 		handleComplete: function() {
 			_SCREENSTATUS = CONSTANT.SCREEN.TITLE;
 		}
-	}
+	};
 
-	var socketio, SocketIO = function() {
-		socketio = this;
+	var SocketIO = function() {
 		this.socket = io();
 		this.initalized();
+		return this;
 	};
 	SocketIO.prototype = {
 		initalized: function() {
 			this.socket.on('timer', $.proxy(function(command, times) {
-				switch( command ) {
-					case "start":
-						this.startTimer();
-						break;
-					case "stop":
-						this.stopTimer();
-						break;
-					case "set":
-						this.setTimer(times);
-						break;
-					case 'countup':
-						this.countup();
-						break;
-					default:
-						console.log(command + 'is not found.');
-						break;
+				switch (command) {
+				case 'start':
+					this.startTimer();
+					break;
+				case 'stop':
+					this.stopTimer();
+					break;
+				case 'set':
+					this.setTimer(times);
+					break;
+				case 'countup':
+					this.countup();
+					break;
+				default:
+					console.log(command + 'is not found.');
+					break;
 				}
 			}, this));
 			// this.socket
@@ -431,11 +439,11 @@
 
 	};
 
-	$(document).ready(function(e){
-		new Preload();
-		new Timer();
-		new Easel();
-		new SocketIO();
+	$(document).ready(function(e) {
+		preload = new Preload();
+		timer = new Timer();
+		easel = new Easel();
+		socketio = new SocketIO();
 		window.timer = timer;
 	});
 
