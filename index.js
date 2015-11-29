@@ -3,7 +3,7 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-app.use('/lib', express.static(__dirname + '/lib'));
+app.use('/bower_components', express.static(__dirname + '/bower_components'));
 app.use('/client', express.static(__dirname + '/client'));
 app.use('/assets', express.static(__dirname + '/assets'));
 

@@ -1,0 +1,26 @@
+{
+  "name": "presen-timer",
+  "description": "my first socket.io app",
+  "main": "index.js",
+  "authors": [
+    "windyakin <windyakin@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/windyakin/PresenTimer",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "EaselJS": "0.8.0",
+    "PreloadJS": "0.6.0",
+    "TweenJS": "0.6.0",
+    "SoundJS": "0.6.0",
+    "jquery": "jQuery#1.11.x",
+    "Honoka": "3.3.6"
+  }
+}
