@@ -21,6 +21,7 @@
     "TweenJS": "0.6.0",
     "SoundJS": "0.6.0",
     "jquery": "jQuery#1.11.x",
-    "Honoka": "3.3.6"
+    "Honoka": "3.3.6",
+    "qrcodejs": "~0.1.0"
   }
 }

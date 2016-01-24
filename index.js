@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var os = require('os');
 
 app.use('/bower_components', express.static(__dirname + '/bower_components'));
 app.use('/client', express.static(__dirname + '/client'));
@@ -15,23 +16,28 @@ app.get('/control', function(req, res) {
 });
 
 io.on('connection', function(socket) {
+	console.log(socket.id);
+	socket.emit('debug', socket.id);
+	socket.on('debug', function(id, msg) {
+		socket.to(id).emit('debug', msg);
+	});
 	socket
-		.on('timer', function(command, time) {
+		.on('timer', function(id, command, time) {
 			switch (command) {
 			case 'start':
-				io.emit('timer', 'start');
+				socket.to(id).emit('timer', 'start');
 				console.log('start');
 				break;
 			case 'stop':
-				io.emit('timer', 'stop');
+				socket.to(id).emit('timer', 'stop');
 				console.log('stop');
 				break;
 			case 'set':
-				io.emit('timer', 'set', time);
+				socket.to(id).emit('timer', 'set', time);
 				console.log(time);
 				break;
 			case 'countup':
-				io.emit('timer', 'countup');
+				socket.to(id).emit('timer', 'countup');
 				console.log('countup');
 				break;
 			default:

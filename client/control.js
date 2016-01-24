@@ -20,30 +20,29 @@
 			this.socket
 				.on('start timer', $.proxy(this.disabledTime, this))
 				.on('stop timer', $.proxy(this.enabledTime, this));
+			// 操作するタイマー
+			this.timerID = (window.location.search.split('?'))[1];
 		},
 		changeTime: function() {
-			var times = {
-				first: Number($('#first').val()) * 60,
-				end:   Number($('#end').val()) * 60
-			};
-			this.socket.emit('timer', 'set', times);
+			var times = this.getInputTimes();
+			this.socket.emit('timer', this.timerID, 'set', times);
 		},
 		resetTime: function() {
-			$('#first, #end').val('0');
-			this.socket.emit('timer', 'set', {first: 0, end: 0});
+			var times = this.getInputTimes();
+			this.socket.emit('timer', this.timerID, 'set', times);
 		},
 		clickStart: function() {
-			this.changeTime();
-			this.socket.emit('timer', 'start');
+			// this.changeTime();
+			this.socket.emit('timer', this.timerID, 'start');
 		},
 		clickStop: function() {
-			this.socket.emit('timer', 'stop');
+			this.socket.emit('timer', this.timerID, 'stop');
 		},
 		countupTime: function() {
-			this.socket.emit('timer', 'countup');
+			this.socket.emit('timer', this.timer.id, 'countup');
 		},
 		countdownTime: function() {
-			this.socket.emit('timer', 'start');
+			this.socket.emit('timer', this.timer.id, 'start');
 		},
 		disabledTime: function() {
 			$('#first').attr('disabled', 'disabled');
@@ -53,14 +52,18 @@
 			$('#first').removeAttr('disabled');
 			$('#end').removeAttr('disabled');
 		},
-		searchTwitter: function() {
-			var track = $('#search').val();
-			this.socket.emit('twitter', track);
+		getInputTimes: function() {
+			var times = {
+				first: Number($('#first').val()) * 60,
+				end:   Number($('#end').val()) * 60
+			};
+			return times;
 		}
 	};
 
 	$(document).ready(function(e) {
 		new Controller();
+		window.ctrl = controller;
 	});
 
 }(jQuery, createjs, io, window, undefined));

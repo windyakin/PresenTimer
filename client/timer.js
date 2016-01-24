@@ -1,4 +1,4 @@
-(function($, createjs, io, window, undefined) {
+(function($, createjs, io, QRCode, window, undefined) {
 
 	// 定数定義
 	var CONSTANT = {
@@ -15,7 +15,8 @@
 	};
 
 	var manifest = [
-		{id: 'Gong', src: '/assets/Gong.ogg'}
+		{id: 'Gong', src: '/assets/Gong.ogg'},
+		{id: 'bell', src: '/assets/bell.ogg'}
 	];
 
 	var _SCREENSTATUS = CONSTANT.SCREEN.LOADING;
@@ -116,20 +117,6 @@
 			var time   = this.objectTime('#222', 350);
 
 			var status = new createjs.Container().set({name: 'status'});
-			// {
-			// 	var time_container = time.getBounds();
-			// 	var statusbox  = new createjs.Shape().set({name: 'box'});
-			// 	statusbox.graphics.f('#FFFFFF').r(0, 0, time_container.width, 140);
-			// 	statusbox.set({x: 0, y: 0});
-			// 	var status_text = new createjs.Text('発表時間', 'Bold 90px A-OTF 新ゴ Pr6N', '#CDDC39').set({name: 'text'});
-			// 	status_text.set({
-			// 		textAlign: 'center',
-			// 		x: time_container.width/2,
-			// 		y: 25
-			// 	});
-			// 	status.set({x: time_container.x, y: time_container.y + time_container.height + 70 });
-			// 	status.addChild(statusbox, status_text);
-			// }
 
 			// 「残り時間」という表示
 			var text = new createjs.Text('残り時間', 'Bold 100px A-OTF 新ゴ Pr6N', '#FFF').set({name: 'text'});
@@ -187,35 +174,39 @@
 		initalized: function() {
 			this.status = 0;
 			this.setting = { first: 0, end: 0 };
-			this.modelt = true;
+			this.modelt = false;
 			this.second = 0;
 			this.countdown = true;
 		},
 		// 経過時間
 		countTime: function(delta) {
 
-			var second = this.getTime();
-			second += delta;
-			this.setTime(second);
+			var status = this.getStatus();
+
+			if (status <= 3) {
+				var second = this.getTime();
+				second += delta;
+				this.setTime(second);
+			}
 
 			var setting = this.getSetting();
+			var change = false;
 
 			if (second <= setting.first) {
-				this.setStatus(1);
+				change = this.setStatus(1);
 			}
 			else if (second <= setting.end) {
-				this.setStatus(2);
+				change = this.setStatus(2);
 			}
 			else if (second > setting.end && second < 6000) {
-				this.setStatus(3);
+				change = this.setStatus(3);
 				// LTモードだったら別処理
 				if (this.modelt) {
 					this.stopTimeover();
 				}
 			}
-			else {
-				// this.second = this.setting.end + this.setting.discussion;
-				this.stopTimeover();
+			if (change) {
+				this.playBell(status);
 			}
 		},
 		// タイマーの色
@@ -259,10 +250,11 @@
 					limit = setting.end - time;
 					break;
 				case 3:
+				case 4:
 					limit = time - setting.end;
 					break;
 				default:
-					limit = setting.end;
+					limit = setting.end - time;
 					break;
 				}
 			}
@@ -280,18 +272,20 @@
 		},
 		// タイマーをスタート
 		startCount: function() {
-			this.second = 0;
+			if (this.status !== 4) {
+				this.second = 0;
+			}
 			this.status = 1;
 		},
 		// タイマーをストップ
 		stopCount: function() {
-			this.status = 0;
+			this.status = 4;
 		},
 		// タイムオーバーの処理
 		stopTimeover: function() {
 			this.status = -1;
 			this.second = this.setting.end;
-			createjs.Sound.play('Gong');
+			// createjs.Sound.play('Gong');
 		},
 		// 残り時間表示と経過時間表示を切り替え
 		toggleCountArrow: function() {
@@ -324,7 +318,14 @@
 		},
 		// ステータスをセット
 		setStatus: function(status) {
+			var oldStatus = this.status;
 			this.status = status;
+			if (status !== oldStatus) {
+				return true;
+			}
+			else {
+				return false;
+			}
 		},
 		// タイマーの設定を取得
 		getSetting: function() {
@@ -346,6 +347,11 @@
 		},
 		fillZero: function(num) {
 			return (('0' + num).slice(-2));
+		},
+		playBell: function(call) {
+			for (var i = 0; i < call; i++) {
+				createjs.Sound.play('bell', {delay: 200 * i});
+			}
 		}
 	};
 
@@ -402,6 +408,15 @@
 	};
 	SocketIO.prototype = {
 		initalized: function() {
+			this.socket.on('connect', $.proxy(function(d) {
+				var ctrlURL = 'http://127.0.0.1:3000/control?' + this.socket.id;
+				new QRCode(document.getElementById('qrcode'), ctrlURL);
+				$('#qrcode').attr({'href': ctrlURL});
+				console.log(this.socket.id);
+			}, this));
+			this.socket.on('debug', $.proxy(function(msg) {
+				console.log(msg);
+			}, this));
 			this.socket.on('timer', $.proxy(function(command, times) {
 				switch (command) {
 				case 'start':
@@ -416,13 +431,14 @@
 				case 'countup':
 					this.countup();
 					break;
+				case 'ltmode':
+					this.toggleLTmode();
+					break;
 				default:
 					console.log(command + 'is not found.');
 					break;
 				}
 			}, this));
-			// this.socket
-			// 	.on('timer', $.proxy(this.switchTimer, this));
 		},
 		startTimer: function() {
 			timer.startCount();
@@ -435,8 +451,10 @@
 		},
 		countupTimer: function() {
 			timer.toggleCountArrow();
+		},
+		toggleLTmode: function() {
+			timer.toggleLTmode();
 		}
-
 	};
 
 	$(document).ready(function(e) {
@@ -445,7 +463,8 @@
 		easel = new Easel();
 		socketio = new SocketIO();
 		window.timer = timer;
+		window.socketio = socketio;
 	});
 
 
-}(jQuery, createjs, io, window, undefined));
+}(jQuery, createjs, io, QRCode, window, undefined));

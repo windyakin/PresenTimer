@@ -6,7 +6,8 @@
 	},
 	"globals": {
 		"createjs": true,
-		"io": true
+		"io": true,
+		"QRCode": true
 	},
 	"rules": {
 		"no-bitwise": 2,
@@ -24,7 +25,7 @@
 		"no-new": 0,
 		"quotes": [2,	"single"],
 		"no-undef": 2,
-		"no-unused-vars": [1, {"vars": "local",	"args": "none"}],
+		"no-unused-vars": [0, {"vars": "local",	"args": "none"}],
 		"strict": 0,
 		"semi": 2,
 		"no-cond-assign": 0,
