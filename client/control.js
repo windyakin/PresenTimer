@@ -54,8 +54,8 @@
 		},
 		getInputTimes: function() {
 			var times = {
-				first: Number($('#first').val()) * 60,
-				end:   Number($('#end').val()) * 60
+				first: Number($('#first').val()) * 10,
+				end:   Number($('#end').val()) * 10
 			};
 			return times;
 		}

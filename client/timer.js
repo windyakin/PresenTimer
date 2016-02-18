@@ -35,8 +35,9 @@
 			// 画面領域の設定(Retinaの対応)
 			$('#game').attr({
 				width: CONSTANT.SIZE.width,
-				height: CONSTANT.SIZE.height}
-			).css({
+				height: CONSTANT.SIZE.height
+			})
+			.css({
 				width: CONSTANT.SIZE.width / 2,
 				height: CONSTANT.SIZE.height / 2
 			});
@@ -100,6 +101,7 @@
 			container.addChild(back, start, text);
 			container.addEventListener('click', function(event) {
 				_SCREENSTATUS = CONSTANT.SCREEN.TIMER;
+				// $('#game').get(0).mozRequestFullScreen();
 			});
 
 			return container;
@@ -250,7 +252,7 @@
 					limit = setting.end - time;
 					break;
 				case 3:
-				case 4:
+				// case 4:
 					limit = time - setting.end;
 					break;
 				default:
@@ -464,6 +466,9 @@
 		socketio = new SocketIO();
 		window.timer = timer;
 		window.socketio = socketio;
+		$('#enterFullScreen').click(function() {
+			$('#game').get(0).mozRequestFullScreen();
+		});
 	});
 
 
